@@ -78,6 +78,7 @@ def response_page(mock_session):
         response = mock_session.get(page)
         response.encoding = 'utf-8'
         return response.text
+
     return _response_page
 
 
@@ -107,6 +108,8 @@ def converting(what_convert: List[Tuple[List[int]]]) -> List[Tuple]:
 def records():
     def _records(mode: str):
         from tests.fixture_data.results import results
+
         result = results[mode]
         return converting(result)
+
     return _records
