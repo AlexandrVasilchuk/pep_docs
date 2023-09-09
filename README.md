@@ -64,11 +64,11 @@ pip install -r requirements.txt
 ## Работа с парсером
 
 ### Режимы работы
-Сброр ссылок на статьи о нововведениях в Python:
+Сбор ссылок на статьи о нововведениях в Python:
 ```bash
 python main.py whats-new
 ```
-Сброр информации о версиях Python:
+Сбор информации о версиях Python:
 ```bash
 python main.py latest-versions
 ```
@@ -76,7 +76,7 @@ python main.py latest-versions
 ```bash
 python main.py download
 ```
-Сброр статусов документов PEP и подсчёт статусов:
+Сбор статусов документов PEP и подсчёт статусов:
 ```bash
 python main.py pep
 ```
