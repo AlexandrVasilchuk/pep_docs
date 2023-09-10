@@ -45,9 +45,10 @@ def default_output(results, *args):
 OUTPUT_TO_FUNCTIONS = {
     PRETTY_MODE: pretty_output,
     FILE_MODE: file_output,
+    None: default_output,
 }
 
 
 def control_output(results, cli_args):
     output = cli_args.output
-    OUTPUT_TO_FUNCTIONS.get(output, default_output)(results, cli_args)
+    OUTPUT_TO_FUNCTIONS.get(output)(results, cli_args)
