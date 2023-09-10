@@ -14,6 +14,7 @@ from constants import (
     EXPECTED_STATUS,
     WHATS_NEW_URL,
     DOWNLOADS_URL,
+    DOWNLOADS_DIR,
 )
 from outputs import control_output
 from utils import find_tag, cook_soup
@@ -24,40 +25,49 @@ NOT_FOUND_ERROR_FORMAT = (
 )
 DOWNLOAD_COMPLETE_FORMAT = 'Архив был загружен и сохранён: {archive_path}'
 LOGS_ARGS_FORMAT = 'Аргументы командной строки {args}'
+INCONGRUITY_STATUSES_FORMAT = (
+    '{packet_url}'
+    ' Статус в карточке: {card_status} '
+    'Ожидаемые статусы: {expected}'
+)
+START_PARSING = 'Парсер запущен!'
+END_PARSING = 'Парсер завершил работу.'
 
 
 def whats_new(session):
+    logs = []
     soup = cook_soup(session, WHATS_NEW_URL)
     sections = soup.select(
-        '#what-s-new-in-python div.toctree-wrapper li.toctree-l1'
+        '#what-s-new-in-python div.toctree-wrapper li.toctree-l1 > a'
     )
     result = [('Ссылка на статью', 'Заголовок', 'Редактор, Автор')]
-    for section in tqdm(sections, colour='GREEN'):
-        version_a_tag = section.find('a')
-        version_link = urljoin(WHATS_NEW_URL, version_a_tag['href'])
-        soup = cook_soup(session, version_link)
-        result.append(
-            (
-                version_link,
-                find_tag(soup, 'h1'),
-                find_tag(soup, 'dl').text.replace('\n', ' '),
+    for a_tag in tqdm(sections, colour='GREEN'):
+        version_link = urljoin(WHATS_NEW_URL, a_tag['href'])
+        try:
+            soup = cook_soup(session, version_link)
+            result.append(
+                (
+                    version_link,
+                    find_tag(soup, 'h1').text,
+                    find_tag(soup, 'dl').text.replace('\n', ' '),
+                )
             )
-        )
+        except ValueError as error:
+            logs.append(error)
+    for log in logs:
+        logging.error(log)
     return result
 
 
 def latest_versions(session):
     soup = cook_soup(session, MAIN_DOC_URL)
-    sidebar = find_tag(soup, 'div', attrs={'class': 'sphinxsidebarwrapper'})
-    ul_tags = sidebar.find_all('ul')
-    for ul in ul_tags:
-        if 'All versions' in ul.text:
-            a_tags = ul.find_all('a')
-            break
-        else:
-            raise ValueError(
-                NOT_FOUND_ERROR_FORMAT.format(url=MAIN_DOC_URL, tag_name='ul')
-            )
+    a_tags = soup.select(
+        'div.sphinxsidebarwrapper ul:-soup-contains("All versions") a'
+    )
+    if a_tags is None:
+        raise KeyError(
+            NOT_FOUND_ERROR_FORMAT.format(url=MAIN_DOC_URL, tag_name='ul')
+        )
     result = []
     for a_tag in a_tags:
         match = re.search(
@@ -78,12 +88,11 @@ def download(session):
     archive_url = urljoin(DOWNLOADS_URL, pdf_a4_link)
     filename = archive_url.split('/')[-1]
     response = session.get(archive_url)
-    downloads_dir = BASE_DIR / 'downloads'
+    downloads_dir = BASE_DIR / DOWNLOADS_DIR
     downloads_dir.mkdir(exist_ok=True)
-    archive_path = downloads_dir / filename
-    with open(archive_path, 'wb') as file:
+    with open(downloads_dir / filename, 'wb') as file:
         file.write(response.content)
-    logging.info(DOWNLOAD_COMPLETE_FORMAT.format(archive_path=archive_path))
+    logging.info(DOWNLOAD_COMPLETE_FORMAT.format(archive_path=downloads_dir))
 
 
 def pep(session):
@@ -96,28 +105,33 @@ def pep(session):
         main_table_status = find_tag(table_line, 'td').text[1:]
         url = find_tag(table_line, 'a').get('href')
         packet_url = urljoin(PEP_TABLE_URL, url)
-        packet_soup = cook_soup(session, packet_url)
-        packet_info = find_tag(
-            packet_soup, 'dl', attrs={'class': 'rfc2822 field-list simple'}
-        )
-        card_status = (
-            packet_info.find(text=re.compile('Status.*'))
-            .parent.find_next_sibling()
-            .text
-        )
-        expected = EXPECTED_STATUS.get(main_table_status)
-        if card_status not in expected:
-            logs.append(
-                f'{packet_url}'
-                f' Статус в карточке: {card_status} '
-                f'Ожидаемые статусы: {expected}'
+        try:
+            packet_soup = cook_soup(session, packet_url)
+            packet_info = find_tag(
+                packet_soup, 'dl', attrs={'class': 'rfc2822 field-list simple'}
             )
-        packet_status = (
-            packet_info.find(text=re.compile('Status.*'))
-            .parent.find_next_sibling()
-            .text
-        )
-        results[packet_status] += 1
+            card_status = (
+                packet_info.find(text=re.compile('Status.*'))
+                .parent.find_next_sibling()
+                .text
+            )
+            expected = EXPECTED_STATUS.get(main_table_status)
+            if card_status not in expected:
+                logs.append(
+                    INCONGRUITY_STATUSES_FORMAT.format(
+                        packet_url=packet_url,
+                        card_status=card_status,
+                        expected=expected,
+                    )
+                )
+            packet_status = (
+                packet_info.find(text=re.compile('Status.*'))
+                .parent.find_next_sibling()
+                .text
+            )
+            results[packet_status] += 1
+        except ValueError as error:
+            logs.append(error)
     for log in logs:
         logging.info(log)
     return [
@@ -137,7 +151,7 @@ MODE_TO_FUNCTION = {
 
 def main():
     configure_logging()
-    logging.info('Парсер запущен!')
+    logging.info(START_PARSING)
     arg_parser = configure_argument_parser(MODE_TO_FUNCTION.keys())
     args = arg_parser.parse_args()
     logging.info(LOGS_ARGS_FORMAT.format(args=args))
@@ -150,8 +164,12 @@ def main():
         if results is not None:
             control_output(results, args)
     except Exception as error:
-        logging.exception(error, stack_info=True)
-    logging.info('Парсер завершил работу.')
+        logging.exception(
+            error,
+            f'Неизвестное значение mode - {parser_mode}',
+            stack_info=True,
+        )
+    logging.info(END_PARSING)
 
 
 if __name__ == '__main__':

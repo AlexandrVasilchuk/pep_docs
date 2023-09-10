@@ -102,20 +102,16 @@ optional arguments:
                         Дополнительные способы вывода данных
 ```
 
-## Автор
+## Контакты
 ___
-<p style="text-align: center">
 Автор:
-<a href=" https://github.com/AlexandrVasilchuk">Васильчук Александр</a>
-
-</p>
+[Васильчук Александр](https://github.com/AlexandrVasilchuk/)
 
 
 
 #### Контакты:
 <a href="mailto:alexandrvsko@gmail.com">![Gmail-badge] <a/>
 <a href="https://t.me/vsko_ico">![Telegram-badge] <a/>
-
 
 [Gmail-badge]: https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white
 [Telegram-badge]: https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white

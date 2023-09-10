@@ -11,25 +11,21 @@ FAILED_URL_FORMAT = 'Сбойный url - {url}. В ответ ничего не
 TAG_NOT_FOUND_FORMAT = 'Не найден тег {tag} {attrs}'
 
 
-def cook_soup(session, url, encoding='UTF-8', features='lxml'):
-    try:
-        response = session.get(url)
-        response.encoding = encoding
-        if response is None:
-            logging.exception(FAILED_URL_FORMAT.format(url=url))
-            return
-        return BeautifulSoup(response.text, features=features)
-    except RequestException:
-        raise RequestException(REQUEST_ERROR_FORMAT.format(url=url))
-
-
-def get_response(session, url):
+def get_response(session, url, encoding='UTF-8'):
     try:
         response = session.get(url)
         response.encoding = 'utf-8'
         return response
-    except RequestException:
-        raise RequestException(REQUEST_ERROR_FORMAT.format(url=url))
+    except RequestException as error:
+        raise ValueError(REQUEST_ERROR_FORMAT.format(url=url), error)
+
+
+def cook_soup(session, url, encoding='UTF-8', features='lxml'):
+    try:
+        response = get_response(session, url, encoding)
+        return BeautifulSoup(response.text, features=features)
+    except RequestException as error:
+        raise ValueError(REQUEST_ERROR_FORMAT.format(url=url), error)
 
 
 def find_tag(soup, tag, attrs=None):

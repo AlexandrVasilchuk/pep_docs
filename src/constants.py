@@ -5,10 +5,8 @@ from urllib.parse import urljoin
 BASE_DIR = Path(__file__).parent
 LOG_DIR = BASE_DIR / 'logs'
 LOG_DIR.mkdir(exist_ok=True)
-DOWNLOADS_DIR = BASE_DIR / 'downloads'
-DOWNLOADS_DIR.mkdir(exist_ok=True)
-RESULTS_DIR = BASE_DIR / 'results'
-RESULTS_DIR.mkdir(exist_ok=True)
+DOWNLOADS_DIR = 'downloads'
+RESULTS_DIR = 'results'
 
 MAIN_DOC_URL = 'https://docs.python.org/3/'
 WHATS_NEW_URL = urljoin(MAIN_DOC_URL, 'whatsnew/')
@@ -29,3 +27,6 @@ EXPECTED_STATUS = {
     'W': ('Withdrawn',),
     '': ('Draft', 'Active'),
 }
+
+PRETTY_MODE = 'pretty'
+FILE_MODE = 'file'
