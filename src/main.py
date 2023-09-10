@@ -32,6 +32,7 @@ INCONGRUITY_STATUSES_FORMAT = (
 )
 START_PARSING = 'Парсер запущен!'
 END_PARSING = 'Парсер завершил работу.'
+BASE_ERROR = 'При работе программы возникла ошибка. {error}'
 
 
 def whats_new(session):
@@ -52,7 +53,7 @@ def whats_new(session):
                     find_tag(soup, 'dl').text.replace('\n', ' '),
                 )
             )
-        except ValueError as error:
+        except ConnectionError as error:
             logs.append(error)
     for log in logs:
         logging.error(log)
@@ -65,7 +66,7 @@ def latest_versions(session):
         'div.sphinxsidebarwrapper ul:-soup-contains("All versions") a'
     )
     if a_tags is None:
-        raise KeyError(
+        raise ValueError(
             NOT_FOUND_ERROR_FORMAT.format(url=MAIN_DOC_URL, tag_name='ul')
         )
     result = []
@@ -130,7 +131,7 @@ def pep(session):
                 .text
             )
             results[packet_status] += 1
-        except ValueError as error:
+        except ConnectionError as error:
             logs.append(error)
     for log in logs:
         logging.info(log)
@@ -155,18 +156,17 @@ def main():
     arg_parser = configure_argument_parser(MODE_TO_FUNCTION.keys())
     args = arg_parser.parse_args()
     logging.info(LOGS_ARGS_FORMAT.format(args=args))
-    session = CachedSession()
-    if args.clear_cache:
-        session.cache.clear()
-    parser_mode = args.mode
     try:
+        session = CachedSession()
+        if args.clear_cache:
+            session.cache.clear()
+        parser_mode = args.mode
         results = MODE_TO_FUNCTION[parser_mode](session)
         if results is not None:
             control_output(results, args)
     except Exception as error:
         logging.exception(
-            error,
-            f'Неизвестное значение mode - {parser_mode}',
+            BASE_ERROR.format(error=error),
             stack_info=True,
         )
     logging.info(END_PARSING)

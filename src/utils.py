@@ -4,26 +4,23 @@ from requests import RequestException
 from exceptions import ParserFindTagException
 
 
-REQUEST_ERROR_FORMAT = 'Возникла ошибка при загрузке страницы {url}'
-FAILED_URL_FORMAT = 'Сбойный url - {url}. В ответ ничего не пришло!'
+REQUEST_ERROR_FORMAT = 'Возникла ошибка при загрузке страницы {url}. {error}'
 TAG_NOT_FOUND_FORMAT = 'Не найден тег {tag} {attrs}'
 
 
 def get_response(session, url, encoding='UTF-8'):
     try:
         response = session.get(url)
-        response.encoding = 'utf-8'
+        response.encoding = encoding
         return response
     except RequestException as error:
-        raise ValueError(REQUEST_ERROR_FORMAT.format(url=url), error)
+        raise ConnectionError(REQUEST_ERROR_FORMAT.format(url=url, error=error))
 
 
 def cook_soup(session, url, encoding='UTF-8', features='lxml'):
-    try:
-        response = get_response(session, url, encoding)
-        return BeautifulSoup(response.text, features=features)
-    except RequestException as error:
-        raise ValueError(REQUEST_ERROR_FORMAT.format(url=url), error)
+    return BeautifulSoup(
+        get_response(session, url, encoding).text, features=features
+    )
 
 
 def find_tag(soup, tag, attrs=None):
