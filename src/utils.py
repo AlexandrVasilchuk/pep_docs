@@ -14,7 +14,9 @@ def get_response(session, url, encoding='UTF-8'):
         response.encoding = encoding
         return response
     except RequestException as error:
-        raise ConnectionError(REQUEST_ERROR_FORMAT.format(url=url, error=error))
+        raise ConnectionError(
+            REQUEST_ERROR_FORMAT.format(url=url, error=error)
+        )
 
 
 def cook_soup(session, url, encoding='UTF-8', features='lxml'):
