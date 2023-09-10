@@ -14,7 +14,9 @@ def file_output(results, cli_args):
     results_dir = BASE_DIR / 'results'
     results_dir.mkdir(exist_ok=True)
     parser_mode = cli_args.mode
-    file_name = f'{parser_mode}_{dt.datetime.now().strftime(DATETIME_FORMAT)}.csv'
+    file_name = (
+        f'{parser_mode}_{dt.datetime.now().strftime(DATETIME_FORMAT)}.csv'
+    )
     file_path = results_dir / file_name
     with open(file_path, 'w', encoding='UTF-8') as file:
         writer = csv.writer(file, dialect=csv.unix_dialect)

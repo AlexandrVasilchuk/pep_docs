@@ -35,5 +35,7 @@ def get_response(session, url):
 def find_tag(soup, tag, attrs=None):
     searched_tag = soup.find(tag, attrs=(attrs if attrs is not None else {}))
     if searched_tag is None:
-        raise ParserFindTagException(TAG_NOT_FOUND_FORMAT.format(tag=tag, attrs=attrs))
+        raise ParserFindTagException(
+            TAG_NOT_FOUND_FORMAT.format(tag=tag, attrs=attrs)
+        )
     return searched_tag

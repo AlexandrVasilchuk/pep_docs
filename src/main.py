@@ -3,7 +3,6 @@ import re
 from collections import defaultdict
 from urllib.parse import urljoin
 
-from bs4 import BeautifulSoup
 from requests_cache import CachedSession
 from tqdm import tqdm
 
@@ -15,14 +14,14 @@ from constants import (
     EXPECTED_STATUS,
     WHATS_NEW_URL,
     DOWNLOADS_URL,
-    DOWNLOADS_DIR,
 )
 from outputs import control_output
-from utils import get_response, find_tag, cook_soup
+from utils import find_tag, cook_soup
 
 
-NOT_FOUND_ERROR_FORMAT = ('При поиске по ссылке {url} в '
-                          'теге <{tag_name}> ничего не нашлось')
+NOT_FOUND_ERROR_FORMAT = (
+    'При поиске по ссылке {url} в ' 'теге <{tag_name}> ничего не нашлось'
+)
 DOWNLOAD_COMPLETE_FORMAT = 'Архив был загружен и сохранён: {archive_path}'
 LOGS_ARGS_FORMAT = 'Аргументы командной строки {args}'
 
@@ -38,8 +37,11 @@ def whats_new(session):
         version_link = urljoin(WHATS_NEW_URL, version_a_tag['href'])
         soup = cook_soup(session, version_link)
         result.append(
-            (version_link, find_tag(soup, 'h1'),
-             find_tag(soup, 'dl').text.replace('\n', ' '))
+            (
+                version_link,
+                find_tag(soup, 'h1'),
+                find_tag(soup, 'dl').text.replace('\n', ' '),
+            )
         )
     return result
 
@@ -70,9 +72,9 @@ def latest_versions(session):
 
 def download(session):
     soup = cook_soup(session, DOWNLOADS_URL)
-    pdf_a4_link = soup.select_one(
-        'table.docutils a[href$="pdf-a4.zip"]'
-    )['href']
+    pdf_a4_link = soup.select_one('table.docutils a[href$="pdf-a4.zip"]')[
+        'href'
+    ]
     archive_url = urljoin(DOWNLOADS_URL, pdf_a4_link)
     filename = archive_url.split('/')[-1]
     response = session.get(archive_url)

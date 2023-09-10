@@ -3,7 +3,7 @@ from logging.handlers import RotatingFileHandler
 
 import argparse
 
-from constants import DT_FORMAT, LOG_FROMAT, LOG_DIR
+from constants import DT_FORMAT, LOG_DIR, LOG_FROMAT
 from outputs import OUTPUT_TO_FUNCTION
 
 
