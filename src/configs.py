@@ -1,9 +1,10 @@
 import logging
-
-import argparse
 from logging.handlers import RotatingFileHandler
 
-from constants import BASE_DIR, LOG_FROMAT, DT_FORMAT
+import argparse
+
+from constants import DT_FORMAT, LOG_FROMAT, LOG_DIR
+from outputs import OUTPUT_TO_FUNCTION
 
 
 def configure_argument_parser(available_modes):
@@ -17,18 +18,15 @@ def configure_argument_parser(available_modes):
     parser.add_argument(
         '-o',
         '--output',
-        choices=('pretty', 'file'),
+        choices=OUTPUT_TO_FUNCTION.keys(),
         help='Дополнительные способы вывода данных',
     )
     return parser
 
 
-def configure_logging():
-    log_dir = BASE_DIR / 'logs'
-    log_dir.mkdir(exist_ok=True)
-    log_file = log_dir / 'parser.log'
+def configure_logging(filename='parser.log'):
     rotation_handler = RotatingFileHandler(
-        log_file, maxBytes=10**6, backupCount=5
+        LOG_DIR / filename, maxBytes=10**6, backupCount=5
     )
     logging.basicConfig(
         level=logging.INFO,
