@@ -113,4 +113,4 @@ ___
 ![Gmail-badge](https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white)  
 alexandrvsko@gmail.com  
 ![Telegram-badge](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)  
-@vsko_ico
+@vsko_dev
